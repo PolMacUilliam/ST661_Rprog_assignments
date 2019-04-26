@@ -1,0 +1,229 @@
+---
+title: "ST661 Assignment1"
+author: "Paul Williamson, 18145469"
+date: "12/10/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+**(a) Construct a vector with values 10,11,12,13,14.**
+_Do this using :, c and seq. Assign your result to x._
+```{r}
+x1 <- (10:14)
+x1
+
+x2 <- c(10,11,12,13,14)
+x2
+
+x3 <- seq(10, 14) 
+x3
+```
+
+
+**(b) Construct a vector with values 14,10,11,13,12. Call it y.**
+```{r}
+y <- c(14,10,11,13,12)
+y
+```
+
+
+**(c) Extract the third value of x.**
+```{r}
+x1[3]
+```
+
+
+**(d) Extract the second and fourth values of y.**
+```{r}
+y[2]; y[4]
+```
+
+**(e) Write a sentence explaining what the next line of code does.**
+```{r}
+result <- sum(x1>y)
+result
+message("This function makes an element-wise comparison of the elements in vector x\nwith the elements in vector y and count those elements in vector x which are larger than\ntheir positional counterpart in vector y; In this case the result is 3.")
+```
+
+**(f) Write a sentence explaining what the next line of code does. (Look up the help page for abs.)**
+```{r}
+result <- sum(abs(x2-y) == 1)
+result
+message("The (x-y) returns a 'difference' vector with values equal to the element-wise difference between vector x values and vector y values;
+the abs() returns a vector with the absolute (positive) magnitude of the values in that 'difference' vector;
+the '== 1' returns a 'logical' vector with values true for those values equal to 1 and false for any other value not equal to 1;
+the sum function results in a summation of all the elements in the resulting 'logical' vector, it treats a false value as 0 and a true value as 1;
+the overall effect or result is a count of the number of elements in vector x which are of magnitude 1 away from their positional counterpart in vector y.")
+```
+
+**(g) Write code which implements the following formula. summation[i=1:5]Xi^2/Yi**
+```{r}
+x <- 1:5
+y <- x
+result <- sum((x*x)/y)
+result
+```
+
+
+**(h) Form a 5 x 2 matrix using the values in x and y.**
+```{r}
+new_matrix <- cbind(x3,y)
+new_matrix
+```
+
+
+# Question 2
+
+```{r}
+house <- read.csv("C:/Users/PAUL/Documents/.Maynooth HDip/ST661 R programming/Assignment1/house.csv",row.names=1)
+head(house)
+```
+
+**(a) Use head to check the first few rows of the data.**
+```{r}
+head(house)
+```
+
+**(b) Extract the row of the data for Ireland.**
+```{r}
+house["Ireland",]
+```
+
+**(c) Find Spain's value for TooDark.**
+```{r}
+house["Spain",1]
+```
+
+**(d) For how many countries is the percentage without an indoor toilet 0?**
+```{r}
+count_NoIndoorToilet <- sum(house[,4] == 0)
+count_NoIndoorToilet
+```
+
+**(e) For how many countries is the percentage without an indoor toilet and without a bath/shower both 0?**
+```{r}
+count_NoIndoorToilet_NoBathShower <- sum((house[,4] == 0) & (house[,3] == 0))
+count_NoIndoorToilet_NoBathShower
+```
+
+**(f) Find the names of the countries where the percentage without an indoor toilet and without a**
+**bar/shower are both zero. Your code should give a vector of the country names.**
+```{r}
+no_modCons <- subset(house, (house[,4] == 0) & (house[,3] == 0))
+no_modCons <- rownames(no_modCons)
+no_modCons
+```
+
+**(g) Find the maximum value of the variable Damp.**
+```{r}
+max_damp <- max(house$Damp)
+max_damp
+```
+
+
+# Question 3
+
+```{r}
+load("C:/Users/PAUL/Documents/.Maynooth HDip/ST661 R programming/Assignment1/worldcup.Rdata")
+head(gtimes) # display data
+head(ngoals) # display data
+```
+
+**(a) Draw a barplot of the number of goals per match. What is the most frequent number of goals?**
+**Find the mean and the median.**
+
+```{r}
+barplot(ngoals) # plot
+
+mode_goals <- max(unique(ngoals))
+
+mean_goals <- mean(ngoals)
+mean_goals
+
+median_goals <- median(ngoals)
+median_goals
+```
+
+
+**(b) The first 52 matches were played in 1990, the next 52 matches were played in 1994, the next 64**
+**matches were played in 1998, and the last 64 matches were played in 2002. Therefore elements**
+**52, 104, 168 and 232 of ngoals give the numbers of matches scored in the four finals. Extract**
+**these elements of ngoals into a vector.**
+
+```{r}
+goalsScoredInFinals <- ngoals[c(52,104,168,232)]
+goalsScoredInFinals
+```
+
+**(c) Make a vector of length 232 containing the year each match was played. Call your vector year.**
+**(Hint: use rep.)**
+```{r}
+yr1990 <- 52
+yr1994 <- 52
+yr1998 <- 64
+yr2002 <- 64
+year <- c(rep(1990, yr1990),rep(1994, yr1994),rep(1998, yr1998),rep(2002, yr2002))
+year
+```
+
+**(d) Turn the vector year into a factor. Make a data frame where the first variable is ngoals and**
+**the second is year.**
+```{r}
+year <- factor(year)
+year
+
+year_goals_df <- data.frame(ngoals,year)
+year_goals_df
+```
+
+**(e) Make a vector called matchn containing the number of the match for that world cup. The**
+**vector should be 1..52, 1..52, 1..64, 1..64. Add this vector to the data frame.**
+```{r}
+matchn <- c(seq(1,52),seq(1,52),seq(1,64),seq(1,64))
+matchn
+year_goals_df <- cbind(year_goals_df,matchn)
+year_goals_df
+```
+
+
+**(f) Extract the rows 52, 104, 168 and 232 of the data frame. Which year's final has the most goals?**
+```{r}
+max_FinalsGoals <- max(year_goals_df[c(52,104,168,232),1])
+max_FinalsGoals
+```
+
+**(g) Make a boxplot of the number of goals played for each year. What can you say about the 8 goal match?**
+```{r}
+boxplot(year_goals_df$ngoals)
+message("What can you say about the 8 goal match? It would seem to be an outlier.")
+```
+
+**(h) (Advanced, optional). The vector gtimes contains the cumulative time in minutes from the**
+**start of the 1990 world cup in which goals were scored (counting playing time only.) Construct**
+**another vector minute containing the minute of each game in which the goal is scored. In what**
+**minutes of the matches are goals most likely to occur?**
+```{r}
+head(gtimes)
+minute <- vector()
+currTime <- 1
+
+for (currTime in 1:length(gtimes))
+  {
+    currentTime <- gtimes[currTime]
+    while(currentTime>90)
+    {
+      currentTime <- currentTime-90
+    }
+    minute[currTime] <- currentTime
+  }
+minute
+
+minute <- factor(minute)
+table(minute)
+names(which.max(table(minute)))
+```

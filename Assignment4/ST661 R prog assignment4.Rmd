@@ -1,0 +1,309 @@
+---
+title: "ST661 R prog assignment 4"
+author: "Paul Williamson, 18145469"
+date: "1 December 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE}
+```
+
+```{r libraries, message=FALSE, echo = FALSE}
+#install.packages("tidyverse")
+library(tidyverse) # every time
+```
+
+
+<!-- For adding pagebreaks to html output   -->
+<!-- <P style="page-break-before: always">  -->
+
+
+## Question 1
+
+```{r load h4data}
+load("h4data")
+head(wim,20)
+```
+
+<P style="page-break-before: always">
+
+>(a) Use mutate (from dplyr) to add a new variable which is the difference in heights of the winner
+>    and loser. Use ggplot to draw a histogram of the new variable.
+
+```{r create ht_diff}
+wim1 <- mutate(wim, ht_diff = winner_ht - loser_ht)
+wim1$ht_diff # confirm new variable ht_diff
+
+ht_diff_hist_plotty <- ggplot(wim1, aes(ht_diff), na.omit()) + geom_histogram()
+suppressWarnings(print(ht_diff_hist_plotty))
+```
+
+<P style="page-break-before: always">
+
+>(b) Construct a dataset **by_player** with one row per player, recording also the number of wins, ranking points,
+>    height and country of the player. Do this in the following steps (i - iv):
+
+i. Construct a dataset w_wim (use **select** and **mutate**), containing for each match the information:
+     * name = winner_name
+     * points = winner_rank_points
+     * ht = winner_ht
+     * ioc= winner_ioc
+     * A new variable **wins** with a value of **1**
+```{r create w_wim}
+w_wim <- select(wim1, name=winner_name, points=winner_rank_points, ht= winner_ht, ioc= winner_ioc)
+w_wim <- mutate(w_wim, wins=1)
+str(w_wim)
+```
+  
+***
+  
+ii. Construct a dataset l_wim (use **select** and **mutate**), containing for each match the information:
+     * name = loser_name
+     * points = loser_rank_points
+     * ht = loser_ht
+     * ioc= loser_ioc
+     * A new variable **wins** with a value of **0**
+```{r create l_wim}
+l_wim <- select(wim1, name=loser_name, points=loser_rank_points, ht= loser_ht, ioc= loser_ioc)
+l_wim <- mutate(l_wim, wins=0)
+str(l_wim)
+```
+
+<P style="page-break-before: always">
+
+iii. Use **rbind** to stick w_wim and l_wim together. Call the result **wl_wim**
+```{r combine w_wim & l_wim}
+wl_wim <- rbind(w_wim, l_wim)
+wl_wim
+```
+  
+***
+  
+iv. Use **group_by** on wl_wim, to group it by name and **summarise** the result of the previous step with:
+     * wins=sum(wins)
+     * points=points[1]
+     * ht=ht[1]
+     * ioc=ioc[1]
+```{r use group_by & summarise}
+# used pipes to pass input/output arguments between group_by and summarise functions
+by_player <- wl_wim %>% group_by(name) %>% summarise(wins=sum(wins), points=points[1], ht=ht[1], ioc=ioc[1])
+head(by_player,3)
+tail(by_player,3)
+```
+
+<P style="page-break-before: always">
+
+>(c) Calculate the average height for all players in the tournament. Use ggplot to plot player points
+>    versus number of wins.
+
+```{r avg height}
+avg_ht <- mean(by_player$ht,na.rm = TRUE)
+avg_ht <- round(avg_ht,2); avg_ht
+```
+
+```{r plot wins v points}
+pts_wins_plotty <- ggplot(by_player, aes(wins, points)) + geom_point()
+pts_wins_plotty
+
+# label points above certain value - not used
+# pts_wins_plotty + geom_text(aes(label=ifelse(ht>=avg_ht, ht,'')),hjust=0,vjust=0)
+```
+  
+<P style="page-break-before: always">
+
+>(d) Using the dataset **by_player**, write code to find the names of the tournament winner and the
+>    losing finalist. If you did not manage to correctly construct the dataset by_player, do this
+>    some other way.
+
+**_This solution using the by_player dataset created above assumes a symmetrical draw..._**
+```{r names of winner & losing finalist}
+winner_name <- by_player[which(by_player$wins == max(by_player$wins)),]$name;
+winner_name
+
+losing_finalist_name <- by_player[which(by_player$wins == max(by_player$wins)-1),]$name;
+losing_finalist_name
+```
+  
+***
+
+**_This solution using the original imported dataset assumes the order of the matches is first to last..._**  
+     * _Used only to confirm the previous result_
+```{r names of winner & losing finalist other}
+tail(select(wim, winner_name, loser_name, score),1)
+```
+  
+***
+  
+>(e) Calculate the number of wins per country. How many matches were won by Spanish (ESP)
+>    players?
+
+```{r wins per country & spanish wins}
+wins_per_country <- by_player %>% group_by(ioc) %>% summarise(total_wins_per_country = sum(wins))
+
+esp_wins <- wins_per_country[which(wins_per_country$ioc == "ESP"),]$total_wins_per_country;
+esp_wins
+```
+  
+<P style="page-break-before: always">
+
+>(f) Draw a barplot showing the number of wins for the top 10 countries, preferrably in decreasing
+>    order by wins.
+
+```{r barplot wins per country}
+# minus sign sorts descending order
+wins_per_country_sorted <- wins_per_country[order(-wins_per_country$total_wins_per_country),];
+top_10_countries <- head(wins_per_country_sorted,10);
+t(top_10_countries) # transposed just for display purposes
+
+top_10_countries_plotty <- ggplot(top_10_countries, aes(x = reorder(ioc, -total_wins_per_country), 
+                                      y = total_wins_per_country, fill = ioc)) +
+  geom_col(colour="black") + geom_text(aes(label = total_wins_per_country), hjust=0.5, vjust=-0.5) +
+  theme(legend.position="none"); top_10_countries_plotty
+```
+
+<P style="page-break-before: always">
+
+## Question 2
+
+**For the University ranking data from the midterm, first convert appropriate variables to numeric.**
+**Then answer these questions using dplyr tools and ggplot, in all cases except part (b).**
+  
+>(a) Summarise the Location (countries) of the universities with counts. Using ggplot, draw a
+>    barplot of these location counts.
+  
+```{r import data}
+d <- read.csv("https://tinyurl.com/y8e8cb9t", stringsAsFactors = FALSE);
+str(d); # check structure
+d$QualityÂ.of.Education <- as.numeric(d$QualityÂ.of.Education)
+str(d); # confirm conversion of appropriate variables to numeric
+```
+
+***
+  
+```{r per country}  
+univs_per_country <- count(d, Location); univs_per_country;
+```
+
+<P style="page-break-before: always">
+
+```{r plot per country}
+univs_per_ctry_plotty <- ggplot(univs_per_country, aes(x = Location, y = n)) + geom_col();
+univs_per_ctry_plotty
+```
+
+<P style="page-break-before: always">
+
+>(b) Redraw the barplot, with bars in decreasing order. Use fct_reorder.
+
+```{r sort plot per country decreasing}
+univs_per_ctry_plotty_decreasing <- 
+  ggplot(univs_per_country, aes(x = fct_reorder(Location, -n), y = n)) +
+  geom_col();
+
+univs_per_ctry_plotty_decreasing
+```
+
+***
+  
+>(c) Write a function called top5 that counts the number of values in 1, 2, ...5 in a numeric vector,
+>    ignoring NAs. Use %in% .
+
+```{r top5 function}
+top5 <- function(input_vector){
+  counter <- 0;
+  for (i in 1:length(input_vector)){
+    if (input_vector[i] %in% 1:5){
+      counter <- counter + 1;
+    }
+  }
+  counter
+}
+```
+
+<P style="page-break-before: always">
+
+**_Check that the top5 function gives the correct answer on vectors below:_**  
+      * x1 <- c(NA,10:1)  
+      * x2 <- rnorm(8)  
+      * x3 <- c(6,2,8,9,-1,0,4)  
+     
+```{r check top5}
+x1 <- c(NA,10:1); top5(x1);
+x2 <- rnorm(8); top5(x2);
+x3 <- c(6,2,8,9,-1,0,4); top5(x3);
+```   
+
+
+>(d) Use top5 to calculate for each university, how many of the categories Quality.of.Education, Publications,
+>    Influence, Citations, Broad.Impact accorded them a top 5 ranking. Add this information to your dataset.
+>      Use base R for your answer.
+
+```{r check top5 univs}
+QOE_col <- which(colnames(d)=="QualityÂ.of.Education") # get col number
+IMP_col <- which(colnames(d)=="Broad.Impact") # get col number
+for (i in 1:nrow(d)){
+  d$top5count[i] <- top5(d[i, QOE_col:IMP_col]) # create new col and set value
+}
+d[1:10, c(which(colnames(d)=="Institution"),ncol(d))] # check result from above
+```
+
+
+>(e) Here is a dplyr answer to the previous question. Explain how it works. Write code which
+>    confirms the columns tc and topcount are identical. Here the base R solution is simpler, in
+>    my opinion. Can anyone supply a simpler and better dplyr-based answer?
+
+```{r}
+sel <- c("QualityÂ.of.Education","Publications","Influence","Citations","Broad.Impact")
+str(sel)
+d1 <- d %>% mutate_at(sel, '<=', 5) %>% select(one_of(sel)) %>% mutate(tc = rowSums(., na.rm=F))
+d1[1:10, ncol(d1)]
+```
+**
+**d1 <- d %>% mutate_at(sel, '<=', 5) %>% select(one_of(sel)) %>% mutate(tc = rowSums(., na.rm=T))**
+  
+**d1 <- d %>% **  
+     - assigns output to dataframe object d1, 'pipes' copy of dataframe object into proceeding function  
+
+**mutate_at(sel, '<=', 5...**
+     - uses temp 'sel' to identify/hold cols satisfying condition '<=' 5  
+
+**select(one_of(sel)) %>%**  
+     - passes cols previously identified to next function without specifying actual col names  
+
+**mutate(tc =...**  
+     - create new col in input dataframe ('tc') to hold sum of row val  
+
+**tc = rowSums(., na.rm=...**  
+     - calculate sum of all  ('.') passed row vals, also ignores NAs  
+
+```{r alternative dplyr check top5 univs}
+#d2 <- for(i in 1:nrow(d)){ mutate(d, tc2[i] <- sum(d[i, 5:9])) }#d2[1:5,"tc2"]
+```
+
+
+>(f) Construct a dataset containing the names of Universities who have at least one top 5 ranking. -->
+
+
+>(g) Add a new variable Continent to d, that is NorthAmerica for Universities in USA and Canada,
+>    Asia for Japan and South Korea, and Europe otherwise. Suggestion: use ifelse within mutate.
+
+```{r add continent}
+d <- mutate(d, Continent = ifelse((d$Location == "USA")|(d$Location =="Canada"), "NorthAmerica", ifelse((d$Location == "Japan")|(d$Location=="South Korea"),"Asia", "Europe" )));
+d[1:5, c(which(colnames(d)=="Institution"),ncol(d))]
+```
+
+>(h) Plot the Citations versus the Broad.Impact rankings, using different colours to distinguish the
+>    continents.
+  
+```{r}
+# using 'Influence' to control point size, minus sign to invert i.e. 1 = most, 40 = least
+univs_cita_bro_plotty <- ggplot(d, aes(Citations, Broad.Impact, colour = Continent)) + 
+  geom_jitter(aes(size = -Influence)) + guides(size=FALSE); univs_cita_bro_plotty +
+  scale_y_reverse(lim=c(400,0)) + scale_x_reverse(lim=c(700,0))
+
+
+# less cluttered vis.
+# univs_cita_bro_plotty <- ggplot(d, aes(sqrt(Citations), Broad.Impact, colour = Continent)) +
+#   geom_jitter(aes(size = -Influence)) + guides(size=FALSE); univs_cita_bro_plotty + 
+#   scale_y_reverse(lim=c(400,0))
+```

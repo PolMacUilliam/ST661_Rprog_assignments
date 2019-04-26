@@ -1,0 +1,379 @@
+---
+title: "ST661 R prog Assignment 2"
+author: "Paul Williamson 18145469"
+date: "6 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.width=4, fig.height=4,fig.align='center', prompt=FALSE,
+                      comment=NA)
+```
+
+#QUESTION 1:
+  
+_Download the cdc1.Rdata file from moodle and load_
+```{r}
+load("C:/Users/PAUL/Documents/.Maynooth HDip/ST661 R programming/Assignment2/cdc1.Rdata")
+```
+
+_check data imported_
+```{r}
+str(cdc1)
+head(cdc1)
+```
+
+*Q1(a) Change variables exerany, smoke100 and hlthplan to be factors with suitable levels.*
+
+_Use a char vector to index cols into data_
+```{r}
+cols_to_change <- c("exerany","smoke100","hlthplan")
+cdc1[cols_to_change] <- lapply(cdc1[cols_to_change], factor)
+```
+
+_check class types in cdc1 dataset to confirm variables have been changed to factors_
+```{r}
+sapply(cdc1, class)
+```
+
+_Alternatively change each col separately using..._
+_cdc$exerany <-as.factor(cdc$exerany)_
+
+_change to suitable levels_
+```{r}
+levels(cdc1$exerany) <- c("no", "yes")
+levels(cdc1$hlthplan) <- c("nocover", "cover")
+levels(cdc1$smoke100) <- c("nosmoke", "smoke")
+```
+
+_Confirm changes to levels_
+```{r}
+str(cdc1)
+head(cdc1)
+```
+
+*Q1(b) Calculate the proportion of men that have health very good or better. Do the same for women.*
+_Who has the better health?_
+```{r}
+class(cdc1)
+
+hlth_table <- table(cdc1$genhlth, cdc1$gender)
+class(hlth_table)
+hlth_table
+barplot(hlth_table, beside=TRUE, col=1:5, legend.text=TRUE)
+```
+
+_Compare overall proportions on barplot_
+```{r}
+prop.table(hlth_table)
+barplot(prop.table(hlth_table), col=1:5, legend.text=TRUE)
+```
+
+_get proportions per gender_
+```{r}
+male_total <-sum(hlth_table[,"m"]) # sum of all rows in column 1 (m)
+male_total
+male_vg_ex_prop <- sum(hlth_table[1:2,"m"])/male_total # proportion: sum/total
+male_vg_ex_prop
+
+female_total <-sum(hlth_table[,"f"]) # sum of all rows in column 2 (f)
+female_total
+female_vg_ex_prop <- sum(hlth_table[1:2,"f"])/female_total # proportion: sum/total
+female_vg_ex_prop
+```
+
+*Q1(c) Use subset to extract the smokers.*
+_For the smokers, calculate the proportion of men that have health very good or better._
+_Do the same for women._
+
+```{r}
+head(cdc1)
+smokers_table <- subset(cdc1, smoke100 == "smoke")
+head(smokers_table)
+```
+
+_extract male smokers_
+```{r}
+healthy_male_smokers <- subset(smokers_table, gender == "m" & (genhlth == "excellent" | genhlth == "very good"))
+head(healthy_male_smokers)
+healthy_male_smokers <- subset(healthy_male_smokers, select = c(genhlth,smoke100,gender))
+head(healthy_male_smokers)
+
+proportion_healthy_male_smokers <- length(healthy_male_smokers)/male_total
+proportion_healthy_male_smokers
+```
+
+_extract female smokers_
+```{r}
+healthy_female_smokers <- subset(smokers_table, gender == "f" & (genhlth == "excellent" | genhlth == "very good"))
+head(healthy_female_smokers)
+healthy_female_smokers <- subset(healthy_female_smokers, select = c(genhlth,smoke100,gender))
+healthy_female_smokers
+
+proportion_healthy_female_smokers <- length(healthy_female_smokers)/female_total
+proportion_healthy_female_smokers
+```
+
+*(d) Repeat (c) for non smokers.*
+```{r}
+non_smokers_table <- subset(cdc1, smoke100 == "nosmoke")
+head(non_smokers_table)
+```
+
+_extract male non smokers_
+```{r}
+healthy_male_non_smokers <- subset(non_smokers_table, gender == "m" & (genhlth == "excellent" | genhlth == "very good"))
+head(healthy_male_non_smokers)
+healthy_male_non_smokers <- subset(healthy_male_non_smokers, select = c(genhlth,smoke100,gender))
+head(healthy_male_non_smokers)
+
+proportion_healthy_male_non_smokers <- length(healthy_male_non_smokers)/male_total
+proportion_healthy_male_non_smokers
+```
+
+_extract female smokers_
+```{r}
+healthy_female_non_smokers <- subset(non_smokers_table, gender == "f" & (genhlth == "excellent" | genhlth == "very good"))
+head(healthy_female_non_smokers)
+healthy_female_non_smokers <- subset(healthy_female_non_smokers, select = c(genhlth,smoke100,gender))
+healthy_female_non_smokers
+
+proportion_healthy_female_non_smokers <- length(healthy_female_non_smokers)/female_total
+proportion_healthy_female_non_smokers
+```
+
+*(e) Based on your calculations of (c) and (d), compare the health of men and women, and the*
+    *health of smokers and non smokers.*
+```{r}
+proportion_healthy_male_smokers
+proportion_healthy_female_smokers
+proportion_healthy_male_non_smokers
+proportion_healthy_female_non_smokers
+```
+
+#QUESTION 2:
+
+*Q2(a) Write function called skew to calculate the skewness of a numeric vector.*
+
+_m3 function definition_
+```{r}
+m3 <- function(vect_of_samples, vect_mean = mean(vect_of_samples),no_samples = length(vect_of_samples),answer = 0){
+  vect_mean <- sum(vect_of_samples)/length(vect_of_samples)
+  no_samples <- length(vect_of_samples)
+  for(i in vect_of_samples){
+  answer <- answer + (i - vect_mean)^3/no_samples
+  }
+  answer
+  }
+```
+
+_m2 function definition_
+```{r}
+m2 <- function(vect_of_samples, vect_mean = mean(vect_of_samples),no_samples = length(vect_of_samples),answer = 0){
+  vect_mean <- sum(vect_of_samples)/length(vect_of_samples)
+  no_samples <- length(vect_of_samples)
+  for(i in vect_of_samples){
+    answer <- answer + (i - vect_mean)^2/no_samples
+  }
+  answer
+}
+```
+
+_Skew function definition_
+```{r}
+skew <- function(vect_of_samples,answer = 0){
+  answer <- m3(vect_of_samples)/(m2(vect_of_samples)^(3/2))
+  answer
+}
+```
+
+*Q2(b) Test your function on mtcars$wt*
+```{r}
+skew(mtcars$wt)
+```
+
+*Q2(c) Test it also on a set of 50 numbers generated from the standard normal distribution.*
+```{r}
+rand_50_norm_distr <- rnorm(50,mean=0,sd=1)
+rand_50_norm_distr
+skew(rand_50_norm_distr)
+```
+
+*Q2(d) Using replicate, replicate the calculation of (c) 1000 times. Draw a histogram of the results*
+*and calculate the mean skewness value.*
+```{r}
+replicate_normal_1000 <- replicate(1000,rnorm(50, mean=0, sd=1))
+hist(replicate_normal_1000)
+skew(replicate_normal_1000)
+```
+
+*Q2(e) Repeat (c) and (d), this time using a set 50 numbers generated from the*
+*exponential distribution with parameter 1.*
+
+_50 numbers generated from the exponential distribution_
+```{r}
+replicate_expo_1000 <- replicate(1000,rexp(50, rate = 1))
+hist(replicate_expo_1000)
+skew(replicate_expo_1000)
+```
+
+*Q2(f) Compare the results of (d) and (e)*
+
+*Q2(g) Write code which calculates the skewness for every numeric variable in cdc1.*
+_Your code should construct a named vector of skewness values, with NA's for non numeric variables._
+_Your code should not give any warnings._
+```{r}
+class(cdc1)
+str(cdc1)
+
+skewness_vect <- vector("numeric", length=length(cdc1))
+skewness_vect
+
+for (i in 1:length(cdc1)){
+  if (is.numeric(cdc1[[i]]))
+    skewness_vect[i] <- skew(cdc1[[i]])
+  else skewness_vect[i]<- NA
+}
+skewness_vect
+```
+
+#QUESTION 3:
+
+*Q3(a) Make a plot of weight-wtdesire versus age for the cdc1 data. Use pch=20 and a colour vector*
+      *which assigns colours as follows:*
+
+_  weight > wtdesire and age > 30 red_
+_  weight > wtdesire and age <= 30 blue_
+_  weight <= wtdesire and age > 30 orange_
+_  weight <= wtdesire and age <= 30 cyan_
+_  Hint: use ifelse._
+```{r}
+plot(weight ~ wtdesire, data=cdc1, col= ifelse(weight>wtdesire & cdc1$age>30,"red",
+                                        ifelse(weight>wtdesire & cdc1$age<=30,"blue",
+                                        ifelse(weight<wtdesire & cdc1$age>30, "orange",
+                                        ifelse(weight<wtdesire & cdc1$age<=30,"cyan","black")))),
+                                        pch=20)
+```
+
+*Q3(b) Recall in a previous lecture we used boxplot.stats to find indices of outliers. Write a function*
+*using boxplot.stats called boxplot.out that given a numeric vector returns low" if there are*
+*low outliers, "high" if there are high outliers, "both" if there are high and low outliers, and*
+*"none" if there are no outliers.*
+```{r}
+boxplot.out <- function(input_vector){
+  
+  check_outliers_status <- "."
+  boxplot_stats_vector <- boxplot.stats(input_vector)$'stats'
+  
+  check_low_outlier <- boxplot_stats_vector[1]
+  temp_LQ <- boxplot_stats_vector[2]
+  temp_median <- boxplot_stats_vector[3]
+  temp_UQ <- boxplot_stats_vector[4]
+  temp_IQR <- temp_UQ - temp_LQ
+  check_high_outlier <- boxplot_stats_vector[5]
+
+  ifelse((check_low_outlier < (temp_LQ - (1.5*temp_IQR))) & (check_high_outlier > (temp_UQ + (1.5*temp_IQR))),
+         check_outliers_status <- "both",
+         ifelse(check_high_outlier > (temp_UQ + (1.5*temp_IQR)),
+         check_outliers_status <- "high",
+         ifelse(check_low_outlier < (temp_LQ - (1.5*temp_IQR)),
+         check_outliers_status <- "low",
+         check_outliers_status <- "none"
+         )))
+  
+  check_outliers_status
+}
+```
+
+_test boxplot.out function using cdc1$weight as input vector_
+```{r}
+boxplot.out(cdc1$weight)
+```
+
+*Q3(c) For the cdc1 data, make boxplots showing weight-wtdesire versus genhlth.*
+```{r}
+plot(weight ~ wtdesire, data=cdc1, col= ifelse(cdc1$genhlth == "excellent","red",
+                                        ifelse(cdc1$genhlth == "very good","blue",
+                                        ifelse(cdc1$genhlth == "good", "orange",
+                                        ifelse(cdc1$genhlth == "fair","cyan","black")))),
+                                        pch=20)
+
+boxplot_collection <- boxplot(weight~wtdesire, data = cdc1, col=cdc1$genhlth)
+str(boxplot_collection)
+#boxplot_collection
+```
+
+*Q3(d) Using boxplot.out and tapply, construct a vector indicating the type of outlier*
+      *(high, low, both or none) in each boxplot.*
+```{r}
+outlier_vector <- vector("numeric",length(cdc1))
+for (i in 1:length(cdc1)){
+  if (is.numeric(cdc1[[i]]))
+    outlier_vector[i] <- boxplot.out(cdc1[[i]])
+  else outlier_vector[i]<- "NA"
+}
+outlier_vector
+```
+
+*Q3(e) Construct a color vector that is "red" for boxplots that have high and low outliers, "blue"*
+*for just high outliers, "green" for just low outliers, and "yellow" otherwise. Use this vector to*
+*colour the boxplots.*
+```{r}
+colours_vector <- c("red", "blue", "green", "yellow")
+```
+
+#QUESTION 4:
+```{r}
+load("C:/Users/PAUL/Documents/.Maynooth HDip/ST661 R programming/Assignment2/kobe.RData")
+head(kobe)
+```
+*Q4(a) Write a while loop to calculate how many throws are required to reach 3 hoops.*
+```{r}
+scores <- 0
+num_games <- length(kobe$basket)
+count_shots <- 0
+while(scores<3){
+  count_shots <- count_shots +1
+  if(kobe$basket[count_shots]=="H"){scores <- scores + 1}
+  }
+count_shots
+```
+
+*Q4(b) Write another while loop to calculate how many throws are required to reach 3 more hoops*
+```{r}
+while(scores<6){
+  # re-using the count_shots (=5) from previous snippet
+  count_shots <- count_shots +1
+  if(kobe$basket[count_shots]=="H"){scores <- scores + 1}
+}
+count_shots
+```
+
+
+# FINAL EXAM - QUESTION 1:
+
+**(A) TREE DIAGRAM**
+
+                            /-----98%---[+ive] = 1.96%
+               /---[lupus]--
+              2%            \------2%---[-ive] = 0.04%
+             /                
+      [test]
+             \
+              98%            /----26%---[+ive] = 25.48%
+               \---[no lupus]
+                             \----74%---[-ive] = 72.52%
+
+                          
+**(B) PROB OF TESTING POSITIVE WITH LUPUS:**
+
+  [LUPAS & +IVE] = 0.02 * 0.98 = 0.0196 = 1.96%
+  
+  [NO LUPUS & +IVE] = 0.98 * 0.26 = 0.2548 = 25.48%
+  
+  [+IVE] = 0.0196 + 0.2548 = 0.2744 = 27.44%
+  
+  => (0.0196 / 0.2744) = 0.0714 = 7.1%
+
+  
+**(C) 'DR HOUSE' IS RIGHT (1 - 0.0714) = 0.9286 => 92.86% OF THE TIME!**

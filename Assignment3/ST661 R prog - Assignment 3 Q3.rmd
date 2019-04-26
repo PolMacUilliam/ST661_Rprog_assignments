@@ -1,0 +1,108 @@
+---
+author: "Paul Williamson, 18145469 AND Ravinder Pal Singh, 18250396"
+date: "16 November 2018"
+output: html_document
+fontsize: 12pt
+---
+
+```{r setup, include=FALSE, results="asis"}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE, results='hide',include=FALSE, fig.pos='htb!'}
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("reshape2")
+library(reshape2)
+#install.packages("ggthemes")
+library(ggthemes)
+library(scales)
+library(tidyverse)
+#install.packages("cowplot")
+library(cowplot)
+library(gridExtra)
+
+```
+  
+**Question 3**
+
+**_(a) Pose a question relating to the data._**
+  
+_How soon into the Heptathlon (7 events) is it possible to see a winning lead. Is it possible to discern any patterns in the scoring which might indicate which athletes are stronger in which events. _
+
+  
+***
+  
+**_(b) Using ggplot, construct a visualisation which helps to answer this question._**
+ 
+```{r, echo=FALSE, warning=FALSE,  message=FALSE}
+hep <- read.csv("Hep2012.csv");
+hep_tot <- hep;
+#head(hep_tot);
+
+# add col with row sums (total points)
+for(i in 1:nrow(hep_tot)){hep_tot$pts_total[i] <- rowSums(hep_tot[i,2:8], na.rm=TRUE)}
+#head(hep_tot);
+
+# use order function to sort data into order based on total points
+# default is in ascending order
+hep_tot_sorted <- hep_tot[order(hep_tot$pts_total),];
+#tail(hep_tot_sorted);
+#str(hep_tot_sorted)
+
+#-----------------------------
+# retrieve bottom 10 scores - excluding 'total points' scored col
+bot10_subset <- hep_tot_sorted[1:10,1:8];
+#bot10_subset; # bottom 10 rows 
+#-----------------------------
+bot10_subsetg <- gather(bot10_subset, key=Event, value=Points,-Athlete);
+#bot10_subsetg; # 70 rows (7 events X bottom 10 athletes)
+#-----------------------------
+#-----------------------------
+# retrieve top 10 scores - excluding 'total points' scored col
+top10_subset <- hep_tot_sorted[(nrow(hep_tot_sorted)-9):nrow(hep_tot_sorted),1:8];
+#top10_subset; # top 10 rows
+#-----------------------------
+top10_subsetg <- gather(top10_subset, key=Event, value=Points,-Athlete);
+#top10_subsetg; # 70 rows (7 events X top 10 athletes)
+#-----------------------------
+#-----------------------------
+
+top_plotty <- ggplot(data = top10_subsetg, aes(x = Athlete, y = Points, fill = Event, label=Points)) +
+  geom_bar(stat = 'identity') + labs(x = "Top 10 Athletes", y = "Points") +
+  theme(axis.title.y = element_text(size = rel(0.8))) +
+  geom_text(size=2, position = position_stack(vjust=0.5)) + 
+  ylim(0, 7000) +
+  coord_flip();
+
+bot_plotty <- ggplot(data = bot10_subsetg, aes(x = Athlete, y = Points, fill = Event, label=Points)) +
+  geom_bar(stat = 'identity') + labs(x = "Bottom 10 Athletes") +
+  theme(axis.title.y = element_text(size = rel(0.8))) +
+  geom_text(size=2, position = position_stack(vjust=0.5)) + 
+  ylim(0, 7000) +
+  coord_flip();
+
+#-----------------------------
+#par(mfrow=c(1,1))
+plot_grid(top_plotty, bot_plotty, nrow = 2, align = "v")
+#top_plotty
+#bot_plotty
+#-----------------------------
+```
+
+  
+  
+***
+  
+  
+**_(c) Answer your question, based on the visualisation._**
+
+_Based on the plots of the top 10 and bottom 10 athletes (in terms of overall points) scored, it can be seen that an early lead for the eventual medalists is discernible very early on after the 3rd event. The eventual Gold medalist lead from the 3rd event until the end - in fact coming out on top in 4 of the 7 events._
+  
+  
+***
+  
+  
+**_(d) Explain why you selected this particular visualisation._**
+
+_We chose this particular visualisation for a number of reasons. Firstly, it showed an interesting perspective on the overall <u>accumulation</u> of points as each individual event concluded. It is also possible to see the <u>proportional effect</u> of the points scored per event as they accumulated. Finally the form we chose to a certain extent also <u>mimics the progress</u> of the Heptathlon. This makes it easy to interpret for any audience._

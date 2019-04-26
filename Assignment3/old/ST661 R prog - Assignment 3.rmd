@@ -1,0 +1,148 @@
+---
+title: 'ST661 R prog Assignment #3'
+author: "Paul Williamson, 18145469"
+date: "16 November 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Question 1
+
+_This code loads the data set Pima.tr, and its help file. Use ggplot2 for all plots._
+```{r}
+library(ggplot2)
+library(MASS)
+head(Pima.tr)
+str(Pima.tr)
+```
+
+_Using this dataset:_
+  
+a. Make a scatterplot plot of bp versus npreg.
+```{r}
+plotty <- ggplot(Pima.tr,aes(bp,npreg))
+plotty + geom_point()
+
+```
+
+b. Using the function cut_interval, construct a factor version of npreg with n=4 levels.
+    + Call this new variable npregf.
+    + Add this variable to dataset Pima.tr.
+```{r}
+npregf <- Pima.tr$npreg
+cut_interval(npregf,4)
+
+#head(npregf)
+#head(Pima.tr)
+#Pima.tr <- cbind(Pima.tr,npregf)
+#str(Pima.tr)
+#Pima.tr$npregf <- factor(Pima.tr$npregf)
+#levels(Pima.tr$npregf)
+#levels(Pima.tr$npregf)
+
+```
+
+
+c. Plot boxplots of bp for each npregf level.
+
+
+d. Make a scatterplot of glu versus age. Use colour to show variable type and add smooths for the two groups.
+
+e. Redo the previous plot, separating out the two types. (Colour is not now needed)
+
+
+
+## Question 2
+
+_The Irish road safety authority recently produced a report with the graph below. Reconstruct it using ggplot. (Use google for help!)_
+
+```{r}
+Agegroup <- c("0-15","16-25","26-35","36-45","46-55","56-65","66+")
+y16 <- c(10,40,38,23,18,13,44)
+y17 <- c(4,33,28,22,22,16,33)
+mydata <- data.frame(Agegroup,y16,y17)
+""
+Year_vect <- c("y16","y17")
+
+
+#rownames(mydata) <- Agegroup
+#colnames(mydata)<-Year_vect
+str(mydata)
+#mydata1 <-t(mydata)
+str(mydata)
+#ggplot(data=mydata)+geom_bar(mapping=aes(x=Agegroup))
+
+
+mydata1 <- mydata.long
+  
+mydata.long <- gather(mydata, variable, value, -Agegroup)
+
+
+ggplot(data = mydata, mapping = aes(Year_vect)) + geom_bar(stat="identity", position = "dodge")
+
+```
+
+```{r}
+mydata2 <- seq(0:66)
+cut(mydata2, 7)
+
+mydata3 <- cbind(Agegroup, c(10,40,38,23,18,13,44),c(4,33,28,22,22,16,33))
+mydata4 <- ("2016", )
+
+
+ggplot(data = mydata, mapping = aes(Year_vect)) + geom_bar(stat="identity", position = "dodge")
+
+```
+
+
+
+```{r}
+Unit <- c("A", "B", "C", "D")
+Yes <- c(50, 65, 20, 41)
+No <- c(70, 67, 40, 20)
+Missing <- c(10, 12, 8, 7)
+df <- data.frame(Unit, Yes, No, Missing)
+
+ggplot(data = df, aes(x = Unit, y = Yes)) +
+  geom_col() +
+  geom_text(aes(label = Yes), position = position_stack(vjust = 0.5))
+
+
+
+
+
+ggplot(data = df.long, aes(x = Unit, y = value, fill = variable)) +
+  geom_col(position = position_dodge()) 
+
+
+```
+
+
+ggplot(means.long,aes(x=variable,y=value,fill=factor(gender)))+
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_discrete(name="Gender",
+                      breaks=c(1, 2),
+                      labels=c("Male", "Female"))+
+  xlab("Beverage")+ylab("Mean Percentage")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
